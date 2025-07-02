@@ -1,0 +1,30 @@
+[package]
+name = "xtap"
+description = "An LD_PRELOAD interception library for runtime hooking of network calls in Unix-like systems."
+homepage = "https://github.com/czee/xtap"
+repository = "https://github.com/czee/xtap"
+readme = "README.md"
+license = "MIT OR Apache-2.0 OR Apache-2.0 WITH LLVM-exception"
+include = ["src", "Cargo.toml", "LICENSE*", "/*.md"]
+
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85.0"
+
+categories = ["development-tools::debugging"]
+keywords = ["ffi", "hooking", "ld_preload"]
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+libc = "0.2.174"
+netdev = "0.36.0"
+socket2 = "0.5.10"
+scopeguard = "1.2.0"
+
+[profile.dev]
+opt-level = 1
+debug = true
+debug-assertions = true
+overflow-checks = true
