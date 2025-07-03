@@ -1,7 +1,7 @@
 use std::cell::Cell;
 use std::sync::OnceLock;
 
-use libc::{c_int, sockaddr, sockaddr_in, socklen_t, AF_INET, AF_INET6};
+use libc::{AF_INET, AF_INET6, c_int, sockaddr, sockaddr_in, socklen_t};
 
 use super::bind::Bind;
 use super::hook::Hook;
@@ -69,12 +69,12 @@ impl Connect {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use libc::{sockaddr, sockaddr_in, AF_INET, AF_INET6, AF_UNIX};
+    use libc::{AF_INET, AF_INET6, AF_UNIX, sockaddr, sockaddr_in};
     use std::mem::size_of;
     use std::net::{Ipv4Addr, SocketAddrV4};
     use std::ptr;
-    use std::sync::atomic::{AtomicBool, Ordering};
     use std::sync::OnceLock;
+    use std::sync::atomic::{AtomicBool, Ordering};
 
     const RC: i32 = 4242;
 

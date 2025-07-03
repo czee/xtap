@@ -7,7 +7,7 @@ use std::ffi::CString;
 use std::sync::OnceLock;
 use std::thread::LocalKey;
 
-use libc::{dlsym, RTLD_NEXT};
+use libc::{RTLD_NEXT, dlsym};
 use scopeguard::{self, ScopeGuard};
 
 use crate::debug_log;

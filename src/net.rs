@@ -1,6 +1,6 @@
 use std::net::IpAddr;
 
-use netdev::{get_interfaces, Interface};
+use netdev::{Interface, get_interfaces};
 
 use crate::debug_log;
 use crate::log::{log_and_none, log_and_some};
@@ -53,8 +53,8 @@ pub(crate) fn interface_by_ip(ip: IpAddr) -> Option<Interface> {
 mod tests {
     use super::*;
     use netdev::{
-        ipnet::{Ipv4Net, Ipv6Net},
         Interface,
+        ipnet::{Ipv4Net, Ipv6Net},
     };
     use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 

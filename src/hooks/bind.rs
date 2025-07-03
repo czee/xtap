@@ -3,7 +3,7 @@ use std::ffi::CString;
 use std::net::SocketAddr;
 use std::sync::OnceLock;
 
-use libc::{setsockopt, sockaddr, socklen_t, SOL_SOCKET, SO_BINDTODEVICE};
+use libc::{SO_BINDTODEVICE, SOL_SOCKET, setsockopt, sockaddr, socklen_t};
 use netdev::Interface;
 use socket2::SockAddr;
 
@@ -149,8 +149,8 @@ mod tests {
     use super::*;
     use std::net::{IpAddr, Ipv4Addr};
     use std::ptr;
-    use std::sync::atomic::{AtomicBool, Ordering};
     use std::sync::OnceLock;
+    use std::sync::atomic::{AtomicBool, Ordering};
 
     type BindFn = unsafe extern "C" fn(i32, *const sockaddr, socklen_t) -> i32;
 

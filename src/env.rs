@@ -1,6 +1,6 @@
 use std::net::IpAddr;
 
-use netdev::{interface, Interface};
+use netdev::{Interface, interface};
 
 use crate::debug_log;
 use crate::net;
