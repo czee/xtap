@@ -126,7 +126,7 @@ impl Bind {
         (binded, bind_addrlen)
     }
 
-    /// Guarded wrapper for `unguarded` bind.
+    /// Guarded wrapper for `unguarded()` bind.
     ///
     /// Returns `Some(i32)` as a result from bind, otherwise `None` to
     /// allow fallback to original `bind` syscall.
@@ -216,40 +216,34 @@ mod tests {
     }
 
     #[test]
-    fn test_should_bind_valid_xtap_ip_triggers_bind() {
+    fn test_valid_xtap_ip_triggers_bind() {
         setup_mock_bind();
         unsafe { std::env::set_var("XTAP_IP", "127.0.0.1") };
 
         let result = BindTest::unguarded(7);
-        assert!(
-            result.is_some(),
-            "should_bind should return Some when XTAP_IP is valid"
-        );
+        assert!(result.is_some(), "should return Some when XTAP_IP is valid");
 
         unsafe { std::env::remove_var("XTAP_IP") };
     }
 
     #[test]
-    fn test_should_bind_invalid_xtap_ip_does_not_bind() {
+    fn test_invalid_xtap_ip_does_not_bind() {
         unsafe { std::env::set_var("XTAP_IP", "not-an-ip") };
 
         let result = BindTest::unguarded(7);
-        assert!(
-            result.is_none(),
-            "should_bind should return None for invalid IP"
-        );
+        assert!(result.is_none(), "should return None for invalid IP");
 
         unsafe { std::env::remove_var("XTAP_IP") };
     }
 
     #[test]
-    fn test_try_bind_interface_with_env_iface() {
-        let iface = Interface {
+    fn test_try_bind_interface() {
+        let interface = Interface {
             name: "lo".to_string(),
             ..Interface::dummy()
         };
 
-        Bind::try_interface(123, IpAddr::V4(Ipv4Addr::LOCALHOST), &Some(iface));
+        Bind::try_interface(123, IpAddr::V4(Ipv4Addr::LOCALHOST), &Some(interface));
     }
 
     #[test]
@@ -257,7 +251,7 @@ mod tests {
         let ip = IpAddr::V4(Ipv4Addr::LOCALHOST);
         let (ptr, len) = Bind::try_ip(ip);
 
-        assert!(!ptr.is_null(), "Sockaddr pointer should not be null");
-        assert!(len > 0, "Sockaddr length should be nonzero");
+        assert!(!ptr.is_null(), "sockaddr pointer should not be null");
+        assert!(len > 0, "sockaddr length should be nonzero");
     }
 }
