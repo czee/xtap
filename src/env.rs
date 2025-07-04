@@ -16,31 +16,31 @@ const XTAP_IP_ENVS: [&str; 6] = [
 ];
 
 /// Return an interface specified by an environment variable or `None`
-fn interface_by_env(key: &str) -> Option<Interface> {
-    if let Ok(name) = std::env::var(key) {
-        debug_log!("{} selects interface: {}", key, name);
+fn interface_by(env: &str) -> Option<Interface> {
+    if let Ok(name) = std::env::var(env) {
+        debug_log!("{} selects interface: {}", env, name);
         let interfaces = interface::get_interfaces();
 
         return interfaces.iter().find(|iface| iface.name == name).cloned();
     } else {
-        debug_log!("Environment variable '{}' not set", key);
+        debug_log!("Environment variable '{}' not set", env);
     }
 
     None
 }
 
 /// Return an IP specified by an environment variable or `None`
-fn ip_by_env(key: &str) -> Option<IpAddr> {
-    if let Ok(ip_str) = std::env::var(key) {
-        debug_log!("{} selects address: {}", key, ip_str);
+fn ip_by(env: &str) -> Option<IpAddr> {
+    if let Ok(ip) = std::env::var(env) {
+        debug_log!("{} selects address: {}", env, ip);
 
-        if let Ok(ip) = ip_str.parse::<IpAddr>() {
+        if let Ok(ip) = ip.parse::<IpAddr>() {
             return Some(ip);
         } else {
-            debug_log!("Invalid IP address format in '{}': {}", key, ip_str);
+            debug_log!("Invalid IP address format in '{}': {}", env, ip);
         }
     } else {
-        debug_log!("Environment variable '{}' not set", key);
+        debug_log!("Environment variable '{}' not set", env);
     }
 
     None
@@ -49,7 +49,7 @@ fn ip_by_env(key: &str) -> Option<IpAddr> {
 /// Returns the first valid IP from an environment variable in XTAP_IP_ENVS
 fn parse_ip_envs() -> Option<IpAddr> {
     for env in XTAP_IP_ENVS.iter() {
-        if let Some(ip) = ip_by_env(env) {
+        if let Some(ip) = ip_by(env) {
             return Some(ip);
         }
     }
@@ -61,7 +61,7 @@ fn parse_ip_envs() -> Option<IpAddr> {
 /// XTAP_INTERFACE_ENVS
 pub(crate) fn parse_interface_envs() -> Option<Interface> {
     for env in XTAP_INTERFACE_ENVS.iter() {
-        if let Some(iface) = interface_by_env(env) {
+        if let Some(iface) = interface_by(env) {
             return Some(iface);
         }
     }
@@ -112,7 +112,7 @@ mod tests {
 
         unsafe { env::set_var(XTAP_INTERFACE_ENVS[0], iface_name) };
 
-        let iface = interface_by_env(XTAP_INTERFACE_ENVS[0]);
+        let iface = interface_by(XTAP_INTERFACE_ENVS[0]);
         assert!(iface.is_some(), "Expected interface found by env var");
         assert_eq!(iface.unwrap().name, *iface_name);
 
@@ -123,7 +123,7 @@ mod tests {
     fn test_interface_by_env_returns_none_when_not_set() {
         clear_xtap_envs();
 
-        let iface = interface_by_env("NONEXISTENT");
+        let iface = interface_by("NONEXISTENT");
         assert!(iface.is_none());
     }
 
@@ -133,7 +133,7 @@ mod tests {
 
         unsafe { env::set_var(XTAP_IP_ENVS[0], "127.0.0.1") };
 
-        let ip = ip_by_env(XTAP_IP_ENVS[0]);
+        let ip = ip_by(XTAP_IP_ENVS[0]);
         assert_eq!(ip, Some("127.0.0.1".parse().unwrap()));
 
         clear_xtap_envs();
@@ -143,7 +143,7 @@ mod tests {
     fn test_ip_by_env_returns_none_when_not_set() {
         clear_xtap_envs();
 
-        let ip = ip_by_env("NONEXISTENT");
+        let ip = ip_by("NONEXISTENT");
         assert!(ip.is_none());
     }
 
@@ -153,7 +153,7 @@ mod tests {
 
         unsafe { env::set_var(XTAP_IP_ENVS[0], "nonexistent") };
 
-        let ip = ip_by_env(XTAP_IP_ENVS[0]);
+        let ip = ip_by(XTAP_IP_ENVS[0]);
         assert!(ip.is_none());
 
         clear_xtap_envs();
