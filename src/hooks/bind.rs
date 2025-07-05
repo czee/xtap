@@ -78,7 +78,7 @@ impl Bind {
         let iface: CString;
 
         if interface.is_none() {
-            iface = net::interface_by_ip(ip).map_or_else(
+            iface = net::interface_by(ip).map_or_else(
                 || {
                     debug_log!(
                         "No interface found for IP, proceeding with connect without binding"

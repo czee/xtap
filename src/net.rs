@@ -5,6 +5,7 @@ use netdev::{Interface, get_interfaces};
 use crate::debug_log;
 use crate::log::{log_and_none, log_and_some};
 
+/// Log helper for interface addresses
 fn log_interface_addrs(interface: &Interface) {
     debug_log!(
         "Interface: {:<10} | Addr(v4): {:?}",
@@ -18,7 +19,8 @@ fn log_interface_addrs(interface: &Interface) {
     );
 }
 
-pub(crate) fn first_interface_ip(interface: &Interface) -> Option<IpAddr> {
+/// Return the first IP address of an `Interface`, preferring IPv4 over IPv6 or `None`
+pub(crate) fn first_ip(interface: &Interface) -> Option<IpAddr> {
     log_interface_addrs(interface);
 
     interface
@@ -34,7 +36,8 @@ pub(crate) fn first_interface_ip(interface: &Interface) -> Option<IpAddr> {
         })
 }
 
-pub(crate) fn interface_by_ip(ip: IpAddr) -> Option<Interface> {
+/// Find an interface by its `IpAddr`.
+pub(crate) fn interface_by(ip: IpAddr) -> Option<Interface> {
     for interface in get_interfaces() {
         log_interface_addrs(&interface);
 
@@ -69,32 +72,32 @@ mod tests {
 
     #[test]
     fn test_first_interface_ip_with_ipv4() {
-        let iface = make_interface(
+        let interface = make_interface(
             "eth0",
             vec![Ipv4Net::new(Ipv4Addr::new(192, 168, 1, 100), 24).unwrap()],
             vec![],
         );
-        let ip = first_interface_ip(&iface);
+        let ip = first_ip(&interface);
 
         assert_eq!(ip, Some(IpAddr::V4(Ipv4Addr::new(192, 168, 1, 100))));
     }
 
     #[test]
     fn test_first_interface_ip_with_ipv6_only() {
-        let iface = make_interface(
+        let interface = make_interface(
             "eth1",
             vec![],
             vec![Ipv6Net::new(Ipv6Addr::LOCALHOST, 128).unwrap()],
         );
-        let ip = first_interface_ip(&iface);
+        let ip = first_ip(&interface);
 
         assert_eq!(ip, Some(IpAddr::V6(Ipv6Addr::LOCALHOST)));
     }
 
     #[test]
     fn test_first_interface_ip_with_no_addrs() {
-        let iface = make_interface("lo", vec![], vec![]);
-        let ip = first_interface_ip(&iface);
+        let interface = make_interface("lo", vec![], vec![]);
+        let ip = first_ip(&interface);
 
         assert_eq!(ip, None);
     }

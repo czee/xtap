@@ -73,7 +73,7 @@ pub(crate) fn parse_interface_envs() -> Option<Interface> {
 /// address specified in the environment variables.
 pub(crate) fn parse(interface: &Option<Interface>) -> Option<IpAddr> {
     if let Some(interface) = interface {
-        net::first_interface_ip(interface)
+        net::first_ip(interface)
     } else {
         debug_log!(
             "Interface unspecified or not found, checking IP address environment variables..."
