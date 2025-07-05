@@ -3,7 +3,7 @@ pub mod connect;
 pub mod hook;
 
 use std::cell::Cell;
-use std::ffi::CString;
+use std::ffi::CStr;
 use std::sync::OnceLock;
 use std::thread::LocalKey;
 
@@ -16,18 +16,17 @@ use crate::debug_log;
 ///
 /// Raw pointers make this unsafe to setup the OnceLock for the
 /// original function symbol.
-pub(crate) unsafe fn setup<F>(lock: &OnceLock<F>, symbol: &'static str) -> F
+pub(crate) unsafe fn setup<F>(lock: &OnceLock<F>, symbol: &'static CStr) -> F
 where
     F: Copy,
 {
     *lock.get_or_init(|| unsafe {
-        let cstr = CString::new(symbol).expect("Symbol had internal null byte");
-        debug_log!("Initial setup for {}()", symbol);
+        debug_log!("Initial setup for {:?}()", symbol);
 
-        let addr = dlsym(RTLD_NEXT, cstr.as_ptr());
+        let addr = dlsym(RTLD_NEXT, symbol.as_ptr());
         assert!(!addr.is_null(), "Failed to find original {symbol:?}()");
 
-        debug_log!("Resolved real {}() to: {:?}", symbol, addr);
+        debug_log!("Resolved real {symbol:?}() to: {:?}", addr);
 
         std::mem::transmute_copy(&(addr as *const ()))
     })
@@ -51,15 +50,15 @@ mod tests {
 
     type MallocFn = unsafe extern "C" fn(usize) -> *mut libc::c_void;
 
-    const SYMBOL: &str = "malloc";
-    const NONEXISTENT: &str = "nonexistent_function";
+    const CSYMBOL: &'static CStr = c"malloc";
+    const NONEXISTENT: &'static CStr = c"nonexistent";
 
     #[test]
     fn test_setup_resolves_known_symbol() {
         static RAW_ADDR: OnceLock<MallocFn> = OnceLock::new();
 
         unsafe {
-            let malloc_fn: MallocFn = setup(&RAW_ADDR, &SYMBOL);
+            let malloc_fn: MallocFn = setup(&RAW_ADDR, &CSYMBOL);
 
             let ptr = malloc_fn(16);
             assert!(!ptr.is_null());

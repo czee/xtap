@@ -1,4 +1,5 @@
 use core::cell::Cell;
+use std::ffi::CStr;
 use std::ffi::CString;
 use std::net::SocketAddr;
 use std::sync::OnceLock;
@@ -48,12 +49,13 @@ pub(crate) trait BindHook: Hook {
 
 impl Hook for Bind {
     const SYMBOL: &'static str = "bind";
+    const CSYMBOL: &'static CStr = c"bind";
 }
 
 impl BindHook for Bind {
     fn raw() -> BindFn {
         debug_log!("bind() intercepted");
-        unsafe { setup(&RAW_BIND, Self::SYMBOL) }
+        unsafe { setup(&RAW_BIND, Self::CSYMBOL) }
     }
 
     fn unguarded(sockfd: i32) -> Option<i32> {
@@ -172,6 +174,7 @@ mod tests {
 
     impl Hook for BindTest {
         const SYMBOL: &'static str = "bind";
+        const CSYMBOL: &'static CStr = c"bind";
     }
 
     impl BindHook for BindTest {

@@ -1,4 +1,5 @@
 use std::cell::Cell;
+use std::ffi::CStr;
 use std::sync::OnceLock;
 
 use libc::{AF_INET, AF_INET6, c_int, sockaddr, sockaddr_in, socklen_t};
@@ -50,12 +51,13 @@ pub(crate) trait ConnectHook: Hook {
 
 impl Hook for Connect {
     const SYMBOL: &'static str = "connect";
+    const CSYMBOL: &'static CStr = c"connect";
 }
 
 impl ConnectHook for Connect {
     fn raw() -> ConnectFn {
         debug_log!("connect() intercepted");
-        unsafe { setup(&RAW_CONNECT, Self::SYMBOL) }
+        unsafe { setup(&RAW_CONNECT, Self::CSYMBOL) }
     }
 }
 
@@ -94,6 +96,7 @@ mod tests {
 
     impl Hook for ConnectTest {
         const SYMBOL: &'static str = "connect";
+        const CSYMBOL: &'static CStr = c"connect";
     }
 
     impl ConnectHook for ConnectTest {
