@@ -73,37 +73,38 @@ impl BindHook for Bind {
 }
 
 impl Bind {
-    /// Tries to bind the socket to a specified interface
-    ///
-    /// Calls `setsockopt` with `SO_BINDTODEVICE` to bind to an interface.
-    fn try_interface(sockfd: i32, ip: std::net::IpAddr, interface: &Option<Interface>) {
-        let iface: CString;
+    /// Returns the name of a specified `Interface` as a `CString`.
+    fn name_of(interface: &Interface) -> CString {
+        CString::new(interface.name.as_str()).expect("Interface name contains null byte")
+    }
 
-        if interface.is_none() {
-            iface = net::interface_by(ip).map_or_else(
-                || {
-                    debug_log!(
-                        "No interface found for IP, proceeding with connect without binding"
-                    );
-                    CString::new("").unwrap()
-                },
-                |iface| CString::new(iface.name).unwrap(),
-            );
-        } else {
-            iface = CString::new(interface.as_ref().unwrap().name.clone()).unwrap();
-            debug_log!(
-                "No IP specified, binding to interface: {}",
-                iface.to_str().unwrap()
-            );
-        }
+    /// Try setting the socket file descriptor, `sockfd`, to bind to an `Interface`
+    ///
+    /// Calls `setsockopt` with `SO_BINDTODEVICE`.
+    fn try_interface(sockfd: i32, ip: IpAddr, interface: &Option<Interface>) {
+        let interface = interface
+            .as_ref()
+            .map(|i| {
+                let name = Self::name_of(i);
+                debug_log!(
+                    "No IP specified, binding to interface: {}",
+                    name.to_str().unwrap()
+                );
+                name
+            })
+            .or_else(|| net::interface_by(ip).map(|i| Self::name_of(&i)))
+            .unwrap_or_else(|| {
+                debug_log!("No interface specified, proceeding with connect without binding");
+                CString::default()
+            });
 
         let res = unsafe {
             setsockopt(
                 sockfd,
                 SOL_SOCKET,
                 SO_BINDTODEVICE,
-                iface.as_ptr().cast(),
-                iface.as_bytes().len() as u32,
+                interface.as_ptr().cast(),
+                interface.as_bytes().len() as u32,
             )
         };
 
