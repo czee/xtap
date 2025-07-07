@@ -61,13 +61,13 @@
 
 Enable debug logging by compiling with debug assertions:
 
-`cargo build --debug`
+`cargo build`
 
 ## Testing
 
-Run tests single-threaded to avoid environment variable race conditions:
+Run each test per-process to prevent race conditions from environment variables and side effects caused by global static mutations:
 
-`cargo test -- --test-threads=1`
+`cargo nextest run --status-level=all`
 
 ## Dependencies
 - [`libc`](https://crates.io/crates/libc) and [`socket2`](https://crates.io/crates/socket2) for socket handling and syscall hooking
