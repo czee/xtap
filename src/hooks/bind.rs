@@ -3,7 +3,7 @@ use std::ffi::CStr;
 use std::ffi::CString;
 use std::mem::{MaybeUninit, size_of};
 use std::net::{IpAddr, SocketAddr};
-use std::sync::OnceLock;
+use std::sync::{LazyLock, OnceLock};
 
 use libc::{
     SO_BINDTODEVICE, SOL_SOCKET, setsockopt, sockaddr, sockaddr_in, sockaddr_in6, sockaddr_storage,
@@ -20,6 +20,8 @@ use crate::net;
 type BindFn = unsafe extern "C" fn(i32, *const sockaddr, socklen_t) -> i32;
 
 static RAW_BIND: OnceLock<BindFn> = OnceLock::new();
+static INTERFACE: LazyLock<Option<Interface>> = LazyLock::new(env::parse_interface_envs);
+static IP: LazyLock<Option<IpAddr>> = LazyLock::new(|| env::parse(&INTERFACE));
 
 thread_local! {
     static IN_HOOK: Cell<bool> = const { Cell::new(false) };
@@ -62,10 +64,9 @@ impl BindHook for Bind {
     }
 
     fn unguarded(sockfd: i32) -> Option<i32> {
-        let interface = env::parse_interface_envs();
-        if let Some(ip) = env::parse(&interface) {
+        if let Some(ip) = *IP {
             let (binded, bind_addrlen) = Self::try_ip(ip);
-            Self::try_interface(sockfd, ip, &interface);
+            Self::try_interface(sockfd, ip, &INTERFACE);
 
             unsafe { Some(Self::raw()(sockfd, binded, bind_addrlen)) }
         } else {
