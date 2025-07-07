@@ -1,12 +1,15 @@
 use core::cell::Cell;
 use std::ffi::CStr;
 use std::ffi::CString;
-use std::net::SocketAddr;
+use std::mem::{MaybeUninit, size_of};
+use std::net::{IpAddr, SocketAddr};
 use std::sync::OnceLock;
 
-use libc::{SO_BINDTODEVICE, SOL_SOCKET, setsockopt, sockaddr, socklen_t};
+use libc::{
+    SO_BINDTODEVICE, SOL_SOCKET, setsockopt, sockaddr, sockaddr_in, sockaddr_in6, sockaddr_storage,
+    socklen_t,
+};
 use netdev::Interface;
-use socket2::SockAddr;
 
 use super::hook::Hook;
 use super::{guard, setup};
@@ -118,15 +121,25 @@ impl Bind {
 
     /// Converts an IP address to a raw socket address pointer and length for binding.
     ///
-    /// Returns a tuple of pointer and length suitable for the `bind` syscall.
-    fn try_ip(ip: std::net::IpAddr) -> (*const sockaddr, u32) {
-        let socket_addr = SocketAddr::new(ip, 0);
-        let sockaddr = SockAddr::from(socket_addr);
-        let (binded, bind_addrlen) = (sockaddr.as_ptr(), sockaddr.len());
+    /// Returns a tuple of pointer and length suitable for `bind(2)`.
+    fn try_ip(ip: IpAddr) -> (*const sockaddr, u32) {
+        let sock_addr = SocketAddr::new(ip, 0);
+        let mut storage = MaybeUninit::<sockaddr_storage>::uninit();
+        let len = match sock_addr {
+            SocketAddr::V4(_) => size_of::<sockaddr_in>(),
+            SocketAddr::V6(_) => size_of::<sockaddr_in6>(),
+        } as u32;
 
-        debug_log!("Binding to interface IP: {:?}", socket_addr.ip());
+        debug_log!("Binding to interface IP: {:?}", ip);
 
-        (binded, bind_addrlen)
+        unsafe {
+            let dst = storage.as_mut_ptr().cast::<u8>();
+            let src = (&sock_addr as *const SocketAddr).cast::<u8>();
+
+            std::ptr::copy_nonoverlapping(src, dst, len as usize);
+
+            (storage.as_ptr().cast::<sockaddr>(), len)
+        }
     }
 
     /// Guarded wrapper for `unguarded()` bind.
