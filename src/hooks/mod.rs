@@ -16,7 +16,7 @@ use crate::debug_log;
 ///
 /// Raw pointers make this unsafe to setup the OnceLock for the
 /// original function symbol.
-pub(crate) unsafe fn setup<F>(lock: &OnceLock<F>, symbol: &'static CStr) -> F
+pub(crate) unsafe fn setup<F>(lock: &OnceLock<F>, symbol: &CStr) -> F
 where
     F: Copy,
 {
@@ -50,15 +50,15 @@ mod tests {
 
     type MallocFn = unsafe extern "C" fn(usize) -> *mut libc::c_void;
 
-    const CSYMBOL: &'static CStr = c"malloc";
-    const NONEXISTENT: &'static CStr = c"nonexistent";
+    const CSYMBOL: &CStr = c"malloc";
+    const NONEXISTENT: &CStr = c"nonexistent";
 
     #[test]
     fn test_setup_resolves_known_symbol() {
         static RAW_ADDR: OnceLock<MallocFn> = OnceLock::new();
 
         unsafe {
-            let malloc_fn: MallocFn = setup(&RAW_ADDR, &CSYMBOL);
+            let malloc_fn: MallocFn = setup(&RAW_ADDR, CSYMBOL);
 
             let ptr = malloc_fn(16);
             assert!(!ptr.is_null());
@@ -73,7 +73,7 @@ mod tests {
         static RAW_ADDR: OnceLock<MallocFn> = OnceLock::new();
 
         unsafe {
-            let _: MallocFn = setup(&RAW_ADDR, &NONEXISTENT);
+            let _: MallocFn = setup(&RAW_ADDR, NONEXISTENT);
         }
     }
 }
