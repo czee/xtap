@@ -12,7 +12,7 @@ edition = "2024"
 rust-version = "1.85.0"
 
 categories = ["development-tools::debugging"]
-keywords = ["ffi", "hooking", "ld_preload"]
+keywords = ["LD_PRELOAD", "ffi", "hooking", "syscall"]
 
 [lib]
 crate-type = ["cdylib"]
