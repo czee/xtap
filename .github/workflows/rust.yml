@@ -11,12 +11,13 @@ env:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v4
+    - name: Install cargo-nextest
+      run: cargo install cargo-nextest
     - name: Build
       run: cargo build --verbose
-    - name: Run tests
-      run: cargo test --verbose
+    - name: Run tests with nextest
+      run: cargo nextest run --status-level=all
